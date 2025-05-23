@@ -1,0 +1,8 @@
+services:
+  task-manager:
+    container_name: task-manager
+    restart: always
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: "task-manager:latest"

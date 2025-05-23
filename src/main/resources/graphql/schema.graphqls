@@ -1,0 +1,16 @@
+scalar Long
+
+type Query {
+    tasks: [TaskRespDTO!]!
+}
+
+type Subscription {
+    tasks: TaskRespDTO!
+}
+
+type TaskRespDTO{
+    id: String!
+    title: String!
+    description: String
+    dueDate: Long!
+}
