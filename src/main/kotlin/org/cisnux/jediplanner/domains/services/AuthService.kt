@@ -1,10 +1,9 @@
 package org.cisnux.jediplanner.domains.services
 
-import org.cisnux.jediplanner.domains.services.dtos.UserLoginDTO
-import org.cisnux.jediplanner.domains.services.dtos.UserRegisterDTO
+import org.cisnux.jediplanner.domains.dtos.AuthResponse
+import org.cisnux.jediplanner.domains.dtos.UserAuth
 
 interface AuthService {
-    suspend fun signIn(userLoginDTO: UserLoginDTO): String
-    suspend fun signUp(userRegisterDTO: UserRegisterDTO): String
+    suspend fun authenticate(userAuth: UserAuth): AuthResponse
 //    suspend fun logOut(onLogout: (userResponseDTO: UserResponseDTO) -> Unit): String
 }

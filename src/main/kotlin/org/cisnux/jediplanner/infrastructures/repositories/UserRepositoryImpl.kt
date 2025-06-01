@@ -1,39 +1,29 @@
 package org.cisnux.jediplanner.infrastructures.repositories
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.withContext
 import org.cisnux.jediplanner.domains.repositories.UserRepository
-import org.cisnux.jediplanner.domains.repositories.entities.User
+import org.cisnux.jediplanner.domains.entities.User
+import org.cisnux.jediplanner.infrastructures.repositories.dao.UserDAO
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 @Repository
-class UserRepositoryImpl : UserRepository {
-    private val tasks = mutableListOf<User>()
+class UserRepositoryImpl(private val userDAO: UserDAO, private val template: R2dbcEntityTemplate) : UserRepository {
 
     override suspend fun findByEmail(email: String): User? = withContext(Dispatchers.IO) {
-        tasks.find { it.email == email }?.let {
-            User(
-                id = it.id,
-                username = it.username,
-                email = it.email,
-                password = it.password,
-                createdAt = it.createdAt,
-                updatedAt = it.updatedAt
-            )
-        }
+        userDAO.findByEmail(email)
     }
 
-    override suspend fun save(user: User): User = withContext(Dispatchers.IO) {
-        tasks.add(user)
-        return@withContext user
+    @Transactional
+    override suspend fun insert(user: User): User? = withContext(Dispatchers.IO) {
+        template.insert(user).log().awaitFirstOrNull()
     }
 
-    override suspend fun update(user: String): User? = withContext(Dispatchers.IO) {
-        val userToUpdate = tasks.find { it.id == user }
-        userToUpdate?.let {
-            tasks.remove(userToUpdate)
-            tasks.add(userToUpdate)
-            userToUpdate
-        }
+    @Transactional
+    override suspend fun update(user: User): User? = withContext(Dispatchers.IO) {
+        template.update(user).log().awaitFirstOrNull()
     }
 }

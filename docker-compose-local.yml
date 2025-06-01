@@ -1,19 +1,33 @@
-# Getting started with SonarQube
-# to run: docker compose -f docker-compose-local.yml up -d
-# to remove: docker compose -f docker-compose-local.yml down
-# to test you can access through http://localhost:9001
-
 services:
-  jedi_planner:
-    image: postgres:17.5
+  jedi_oracle19:
+    image: oracle/database:19.3.0-ee
     restart: always
     environment:
-      POSTGRES_USER: jedi
-      POSTGRES_PASSWORD: jedi123
-      POSTGRES_DB: jedi_planner
+      ORACLE_PWD: oracle123
+    ports:
+      - "1523:1521"
+
+#  jedi_planner_db:
+#    image: postgres:17.5
+#    restart: always
+#    environment:
+#      POSTGRES_USER: jedi
+#      POSTGRES_PASSWORD: jedi123
+#      POSTGRES_DB: jedi_planner
+#    ports:
+#      - "5434:5432"
+#    volumes:
+#      - jedi_planner_db:/var/lib/postgresql
+#      - jedi_planner_db_data:/var/lib/postgresql/datas
+
+  flyway:
+    image: flyway/flyway
+    depends_on:
+      - jedi_oracle19
     volumes:
-      - jedi_planner_db:/var/lib/postgresql
-      - jedi_planner_db_data:/var/lib/postgresql/datas
+      - ./migrations:/flyway/sql
+    command: -url=jdbc:oracle:thin:@//jedi_oracle19:1521/ORCLPDB1 -user=developer -password=developer123 migrate
+
   sonarqube:
     image: sonarqube:lts-community
     restart: always
@@ -51,5 +65,5 @@ volumes:
   sonarqube_temp:
   sonar_db:
   sonar_db_data:
-  jedi_planner_db:
-  jedi_planner_db_data:
+#  jedi_planner_db:
+#  jedi_planner_db_data:

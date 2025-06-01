@@ -3,35 +3,37 @@ package org.cisnux.jediplanner.infrastructures.repositories
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.withContext
 import org.cisnux.jediplanner.commons.logger.Loggable
 import org.cisnux.jediplanner.domains.repositories.TaskRepository
-import org.cisnux.jediplanner.domains.repositories.entities.Task
-import org.cisnux.jediplanner.infrastructures.repositories.h2.TaskDAO
+import org.cisnux.jediplanner.domains.entities.Task
+import org.cisnux.jediplanner.infrastructures.repositories.dao.TaskDAO
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 @Repository
-open class TaskRepositoryImpl(private val taskDAO: TaskDAO, private val template: R2dbcEntityTemplate) : TaskRepository, Loggable {
+class TaskRepositoryImpl(private val taskDAO: TaskDAO, private val template: R2dbcEntityTemplate) : TaskRepository, Loggable {
 
     override suspend fun findById(id: String): Task? = withContext(Dispatchers.IO) {
-        taskDAO.findById(id).awaitSingleOrNull()
+        taskDAO.findById(id)
     }
 
-    override suspend fun save(task: Task): Task? = withContext(Dispatchers.IO) {
-        template.insert(task).awaitSingleOrNull()
+    @Transactional
+    override suspend fun insert(task: Task): Task? = withContext(Dispatchers.IO) {
+        template.insert(task).log().awaitFirstOrNull()
     }
 
+    @Transactional
     override suspend fun update(task: Task): Task? = withContext(Dispatchers.IO) {
-        template.update(task).awaitSingleOrNull()
+        template.update(task).log().awaitFirstOrNull()
     }
 
-    override suspend fun delete(id: String): Unit = withContext(Dispatchers.IO) {
-        taskDAO.deleteById(id).awaitSingleOrNull()
+    @Transactional
+    override suspend fun deleteById(id: String): Unit = withContext(Dispatchers.IO) {
+        taskDAO.deleteById(id)
     }
 
-    override fun findAll(): Flow<Task> = taskDAO.findAll().asFlow()
+    override fun findAll(email: String): Flow<Task> = taskDAO.findAllByEmail(email).flowOn(Dispatchers.IO)
 }

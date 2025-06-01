@@ -1,0 +1,18 @@
+spring:
+  r2dbc:
+    url: r2dbc:oracle://localhost:1523/ORCLPDB1
+    username: developer
+    password: developer123
+  graphql:
+    graphiql:
+      enabled: true
+    websocket:
+      path: /graphql
+jwt:
+  secret: e2926909a5c43ecea3ffa3b65fc747089755d687f401cd01e1a9372ab2d39e0700f108b7a6e739170e0cd25ef4f7bc9fdcc9b71de8d1be7e6e4490aa35d191a2
+  access-token-expiration: 900000 # 15 minutes
+  refresh-token-expiration: 86400000 # 24 hours
+logging:
+  level:
+    org.springframework.r2dbc.core: DEBUG
+    io.r2dbc.spi: DEBUG

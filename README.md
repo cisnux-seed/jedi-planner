@@ -40,10 +40,10 @@ erDiagram
         UUID user_id FK "v7"
         string title "not null"
         string description "nullable"
-        boolean is_completed "default false"
+        boolean is_completed "not null and default false"
         timestamp due_date "not null"
-        timestamp created_at "default now()"
-        timestamp updated_at "default now()"
+        timestamp created_at "not null and default now()"
+        timestamp updated_at "not null and default now()"
     }
     
     task_tags {

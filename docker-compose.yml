@@ -1,8 +1,8 @@
 services:
-  task-manager:
-    container_name: task-manager
+  jedi_planner:
+    container_name: jedi-planner
     restart: always
     build:
       context: ./
       dockerfile: Dockerfile
-    image: "task-manager:latest"
+    image: "jedi-planner:latest"

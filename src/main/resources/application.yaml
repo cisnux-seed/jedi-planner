@@ -3,16 +3,10 @@ spring:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
   application:
     name: jedi-planner
-  r2dbc:
-    url: r2dbc:h2:file:///./jediplanner
-    username: jedi
-    password: jedi123
   jackson:
     property-naming-strategy: LOWER_CAMEL_CASE
-  graphql:
-    graphiql:
-      enabled: true
-    websocket:
-      path: /graphql
+  main:
+    allow-bean-definition-overriding: true
+    web-application-type: reactive
 server:
   port: 3120

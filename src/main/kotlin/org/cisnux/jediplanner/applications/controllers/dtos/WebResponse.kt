@@ -1,6 +1,6 @@
 package org.cisnux.jediplanner.applications.controllers.dtos
 
-data class WebResponseDTO<out T>(
-    val meta: MetaResponseDTO,
+data class WebResponse<out T>(
+    val meta: MetaResponse,
     val data: T? = null,
 )

@@ -2,90 +2,80 @@ package org.cisnux.jediplanner.domains.services
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.cisnux.jediplanner.commons.exceptions.APIException
 import org.cisnux.jediplanner.commons.logger.Loggable
 import org.cisnux.jediplanner.domains.repositories.TaskRepository
-import org.cisnux.jediplanner.domains.repositories.entities.Task
-import org.cisnux.jediplanner.domains.services.dtos.NewTaskDTO
-import org.cisnux.jediplanner.domains.services.dtos.TaskRespDTO
-import org.cisnux.jediplanner.domains.services.dtos.TaskUpdateDTO
+import org.cisnux.jediplanner.domains.entities.Task
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import java.time.Instant
-import java.util.UUID
 
 @Service
- class TaskServiceImpl(val taskRepository: TaskRepository, val validationService: ValidationService) : TaskService,
+class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
     Loggable {
-    override fun getTasks(): Flow<TaskRespDTO> = taskRepository.findAll().map {
-        TaskRespDTO(
-            id = it.id!!,
-            title = it.title,
-            description = it.description,
-            dueDate = it.dueDate.toEpochMilli(),
-            hasCompleted = it.hasCompleted
-        )
-    }
-        .flowOn(Dispatchers.IO)
 
-    override suspend fun getTaskById(id: String): TaskRespDTO = withContext(Dispatchers.IO) {
-        taskRepository.findById(id)?.let {
-            TaskRespDTO(
-                id = it.id!!,
-                title = it.title,
-                description = it.description,
-                dueDate = it.dueDate.toEpochMilli(),
-                hasCompleted = it.hasCompleted
-            )
-        } ?: throw APIException.NotFoundResourceException(
-            statusCode = 404,
+    override fun getAllByEmail(owner: String): Flow<Task> =
+        taskRepository.findAll(owner)
+
+
+    override suspend fun getById(owner: String, id: String): Task = withContext(Dispatchers.IO) {
+        val task = taskRepository.findById(id) ?: throw APIException.NotFoundResourceException(
+            statusCode = HttpStatus.NOT_FOUND.value(),
             message = "Task with id $id not found"
         )
+
+        if (task.email != owner) {
+            throw APIException.ForbiddenException(
+                statusCode = HttpStatus.FORBIDDEN.value(),
+                message = "you are not authorized to access this task"
+            )
+        }
+
+        task
     }
 
-    override suspend fun createTask(newTaskDTO: NewTaskDTO): UUID = withContext(Dispatchers.IO) {
-        log.info("creating new task: $newTaskDTO")
-        validationService.validateObject(newTaskDTO)
-        val task = Task(
-            id = UUID.randomUUID(),
-            title = newTaskDTO.title!!,
-            description = newTaskDTO.description!!,
-            dueDate = newTaskDTO.dueDate!!
+    override suspend fun create(newTask: Task): String = withContext(Dispatchers.IO) {
+        log.info("creating new task: $newTask")
+        taskRepository.insert(newTask)?.id ?: throw APIException.InternalServerException(
+            statusCode = 500,
+            message = "Failed to create task"
         )
-        taskRepository.save(task)?.id ?:
-            throw APIException.InternalServerException(
-                statusCode = 500,
-                message = "Failed to create task"
-            )
     }
 
-    override suspend fun updateTask(taskUpdateDTO: TaskUpdateDTO): UUID? = withContext(Dispatchers.IO) {
-        log.info("updating task: $taskUpdateDTO")
-        validationService.validateObject(taskUpdateDTO)
-        val task = taskRepository.findById(taskUpdateDTO.id!!)
+    override suspend fun update(newTask: Task): String? = withContext(Dispatchers.IO) {
+        log.info("updating task: $newTask")
+        val task = taskRepository.findById(newTask.id)
             ?: throw APIException.NotFoundResourceException(
-                statusCode = 404,
-                message = "Task with id ${taskUpdateDTO.id} not found"
+                message = "task with id ${newTask.id} not found"
             )
+        if (task.email != newTask.email) {
+            throw APIException.ForbiddenException(
+                statusCode = HttpStatus.FORBIDDEN.value(),
+                message = "you are not authorized to update this task"
+            )
+        }
         val updatedTask = task.copy(
-            title = taskUpdateDTO.title!!,
-            description = taskUpdateDTO.description!!,
-            dueDate = taskUpdateDTO.dueDate!!,
-            hasCompleted = taskUpdateDTO.hasCompleted!!,
-            updatedAt = Instant.now()
+            title = newTask.title,
+            description = newTask.description,
+            dueDate = newTask.dueDate,
+            isCompleted = newTask.isCompleted,
+            updatedAt = newTask.updatedAt
         )
         taskRepository.update(updatedTask)?.id
     }
 
-    override suspend fun deleteTask(id: String): UUID? = withContext(Dispatchers.IO) {
+    override suspend fun delete(owner: String, id: String): String? = withContext(Dispatchers.IO) {
         val task = taskRepository.findById(id)
             ?: throw APIException.NotFoundResourceException(
-                statusCode = 404,
-                message = "Task with id $id not found"
+                message = "task with id $id not found"
             )
-        taskRepository.delete(id)
+        if (task.email != owner) {
+            throw APIException.ForbiddenException(
+                statusCode = HttpStatus.FORBIDDEN.value(),
+                message = "you are not authorized to delete this task"
+            )
+        }
+        taskRepository.deleteById(id)
         task.id
     }
 }
