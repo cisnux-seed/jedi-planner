@@ -1,7 +1,6 @@
 package org.cisnux.jediplanner.applications.controllers
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import org.cisnux.jediplanner.applications.controllers.dtos.MetaResponse
@@ -35,7 +34,6 @@ import java.time.ZoneOffset
 class TaskController(private val taskService: TaskService) : Loggable {
 
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @GetMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseStatus(HttpStatus.OK)
     suspend fun getAllTasks(@Subject subject: ContextPayload): WebResponse<List<TaskResponse>> =
