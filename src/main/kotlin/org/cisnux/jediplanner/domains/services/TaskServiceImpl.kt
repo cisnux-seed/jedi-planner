@@ -1,8 +1,12 @@
 package org.cisnux.jediplanner.domains.services
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -20,14 +24,18 @@ class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
     private val taskFlows = mutableMapOf<String, MutableStateFlow<List<Task>>>()
     private val mutex = Mutex()
 
-    override suspend fun getRealtimeTasks(owner: String): Flow<List<Task>> {
+    override suspend fun getRealtimeTasks(owner: String): SharedFlow<List<Task>> {
         mutex.withLock {
             if (!taskFlows.containsKey(owner)) {
                 val initialTasks = taskRepository.findAll(owner).toList()
                 taskFlows[owner] = MutableStateFlow(initialTasks)
             }
         }
-        return taskFlows[owner]!!
+        return taskFlows[owner]!!.stateIn(
+            scope = TaskCoroutineScope,
+            started = SharingStarted.WhileSubscribed(),
+            initialValue = taskFlows[owner]!!.value
+        )
     }
 
     override fun getAllByEmail(owner: String): Flow<Task> =
@@ -106,5 +114,9 @@ class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
             refreshTasks(owner)
         }
         task.id
+    }
+
+    companion object {
+        private val TaskCoroutineScope = CoroutineScope(Dispatchers.Default)
     }
 }

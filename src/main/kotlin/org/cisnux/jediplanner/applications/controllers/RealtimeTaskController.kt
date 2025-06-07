@@ -18,7 +18,6 @@ class RealtimeTaskController(
     @SubscriptionMapping("tasks")
     suspend fun getAllRealtimeTasks(@Subject subject: ContextPayload): Flow<List<TaskResponse>> {
         log.info("Fetching tasks for user: $subject")
-        taskService.refreshTasks(subject.username)
         return taskService.getRealtimeTasks(subject.username)
             .map { tasks ->
                 tasks.map { task ->
