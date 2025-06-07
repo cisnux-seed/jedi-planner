@@ -1,4 +1,4 @@
-package org.cisnux.jediplanner.commons.resolvers
+package org.cisnux.jediplanner.applications.resolvers
 
 @Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)

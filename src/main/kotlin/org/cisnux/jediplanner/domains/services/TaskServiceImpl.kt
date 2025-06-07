@@ -2,6 +2,10 @@ package org.cisnux.jediplanner.domains.services
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.cisnux.jediplanner.commons.exceptions.APIException
 import org.cisnux.jediplanner.commons.logger.Loggable
@@ -13,9 +17,28 @@ import org.springframework.stereotype.Service
 @Service
 class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
     Loggable {
+    private val taskFlows = mutableMapOf<String, MutableStateFlow<List<Task>>>()
+    private val mutex = Mutex()
+
+    override suspend fun getRealtimeTasks(owner: String): Flow<List<Task>> {
+        mutex.withLock {
+            if (!taskFlows.containsKey(owner)) {
+                val initialTasks = taskRepository.findAll(owner).toList()
+                taskFlows[owner] = MutableStateFlow(initialTasks)
+            }
+        }
+        return taskFlows[owner]!!
+    }
 
     override fun getAllByEmail(owner: String): Flow<Task> =
         taskRepository.findAll(owner)
+
+
+    override suspend fun refreshTasks(owner: String) {
+        log.info("Refreshing tasks for user: $owner")
+        val updatedTasks = taskRepository.findAll(owner).toList()
+        taskFlows[owner]?.emit(updatedTasks)
+    }
 
 
     override suspend fun getById(owner: String, id: String): Task = withContext(Dispatchers.IO) {
@@ -36,7 +59,9 @@ class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
 
     override suspend fun create(newTask: Task): String = withContext(Dispatchers.IO) {
         log.info("creating new task: $newTask")
-        taskRepository.insert(newTask)?.id ?: throw APIException.InternalServerException(
+        taskRepository.insert(newTask)?.id?.also {
+            refreshTasks(newTask.email)
+        } ?: throw APIException.InternalServerException(
             statusCode = 500,
             message = "Failed to create task"
         )
@@ -61,7 +86,9 @@ class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
             isCompleted = newTask.isCompleted,
             updatedAt = newTask.updatedAt
         )
-        taskRepository.update(updatedTask)?.id
+        taskRepository.update(updatedTask)?.id?.also {
+            refreshTasks(newTask.email)
+        }
     }
 
     override suspend fun delete(owner: String, id: String): String? = withContext(Dispatchers.IO) {
@@ -75,7 +102,9 @@ class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
                 message = "you are not authorized to delete this task"
             )
         }
-        taskRepository.deleteById(id)
+        taskRepository.deleteById(id).also {
+            refreshTasks(owner)
+        }
         task.id
     }
 }

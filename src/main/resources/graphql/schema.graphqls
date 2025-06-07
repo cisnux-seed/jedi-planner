@@ -5,7 +5,7 @@ type Query {
 }
 
 type Subscription {
-    tasks: TaskRespDTO!
+    tasks: [TaskRespDTO!]!
 }
 
 type TaskRespDTO{
@@ -13,4 +13,5 @@ type TaskRespDTO{
     title: String!
     description: String
     dueDate: Long!
+    isCompleted: Boolean!
 }

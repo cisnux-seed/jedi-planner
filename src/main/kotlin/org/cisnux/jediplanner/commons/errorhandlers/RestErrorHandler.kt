@@ -19,7 +19,7 @@ class RestErrorHandler : Loggable {
 
     @ExceptionHandler(Exception::class)
     fun handleGlobalException(exception: Exception): ResponseEntity<WebResponse<String?>> {
-        log.debug("Error", exception)
+        log.error("Error", exception)
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
             WebResponse(
                 meta = MetaResponse(

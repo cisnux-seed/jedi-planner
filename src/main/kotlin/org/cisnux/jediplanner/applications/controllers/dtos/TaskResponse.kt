@@ -1,6 +1,6 @@
 package org.cisnux.jediplanner.applications.controllers.dtos
 
-data class TaskResp(
+data class TaskResponse(
     val id: String,
     val title: String,
     val description: String?,
