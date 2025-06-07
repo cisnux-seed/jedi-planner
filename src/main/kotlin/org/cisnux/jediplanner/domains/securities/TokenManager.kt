@@ -3,7 +3,7 @@ package org.cisnux.jediplanner.domains.securities
 import org.cisnux.jediplanner.domains.entities.User
 import java.time.Instant
 
-interface TokenService {
+interface TokenManager {
     fun generate(
         secretKey: String,
         user: User,

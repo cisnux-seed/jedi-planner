@@ -13,7 +13,7 @@ import org.cisnux.jediplanner.applications.controllers.dtos.MetaResponse
 import org.cisnux.jediplanner.applications.controllers.dtos.WebResponse
 import org.cisnux.jediplanner.commons.configs.JwtProperties
 import org.cisnux.jediplanner.commons.logger.Loggable
-import org.cisnux.jediplanner.domains.securities.TokenService
+import org.cisnux.jediplanner.domains.securities.TokenManager
 import org.cisnux.jediplanner.domains.services.UserServiceImpl
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.graphql.execution.ErrorType
@@ -39,7 +39,7 @@ import reactor.core.publisher.Mono
 class AuthenticationFilter(
     private val jwtProperties: JwtProperties,
     private val userServiceImpl: UserServiceImpl,
-    private val tokenService: TokenService
+    private val tokenManager: TokenManager
 ) : WebGraphQlInterceptor, WebFilter, Loggable {
     private val pathPatternParser = PathPatternParser()
 
@@ -92,7 +92,7 @@ class AuthenticationFilter(
         }
 
         try {
-            val email = tokenService.extractEmail(jwtProperties.accessSecret, jwtToken)
+            val email = tokenManager.extractEmail(jwtProperties.accessSecret, jwtToken)
             if (email == null) {
                 log.info("token is invalid or expired: $jwtToken")
                 val response = exchange.response
@@ -106,7 +106,7 @@ class AuthenticationFilter(
 
             val user = userServiceImpl.findByUsername(email)
 
-            if (user != null && tokenService.isValid(jwtProperties.accessSecret, jwtToken, user)) {
+            if (user != null && tokenManager.isValid(jwtProperties.accessSecret, jwtToken, user)) {
                 val ctxPayload = ContextPayload(username = user.email)
                 val auth =
                     UsernamePasswordAuthenticationToken(ctxPayload, null, ctxPayload.authorities)
@@ -198,14 +198,14 @@ class AuthenticationFilter(
         }
 
         try {
-            val email = tokenService.extractEmail(jwtProperties.accessSecret, jwtToken)
+            val email = tokenManager.extractEmail(jwtProperties.accessSecret, jwtToken)
             if (email == null) {
                 return Mono.just(onAuthenticationFailure(request.toExecutionInput(), executionResult, error))
             }
             val user = mono { userServiceImpl.findByUsername(email) }
 
             return user.flatMap { user ->
-                if (user != null && tokenService.isValid(jwtProperties.accessSecret, jwtToken, user)) {
+                if (user != null && tokenManager.isValid(jwtProperties.accessSecret, jwtToken, user)) {
                     val ctxPayload = ContextPayload(username = user.email)
                     val auth =
                         UsernamePasswordAuthenticationToken(ctxPayload, null, ctxPayload.authorities)

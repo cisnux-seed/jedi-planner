@@ -4,13 +4,13 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.cisnux.jediplanner.domains.entities.User
-import org.cisnux.jediplanner.domains.securities.TokenService
+import org.cisnux.jediplanner.domains.securities.TokenManager
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.Date
 
 @Service
-class JwtService : TokenService {
+class JwtManager : TokenManager {
     override fun generate(
         secretKey: String,
         user: User,

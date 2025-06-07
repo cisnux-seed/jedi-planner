@@ -13,7 +13,7 @@ import org.cisnux.jediplanner.domains.entities.Authentication
 import org.cisnux.jediplanner.domains.entities.User
 import org.cisnux.jediplanner.domains.repositories.TokenRepository
 import org.cisnux.jediplanner.domains.repositories.UserRepository
-import org.cisnux.jediplanner.domains.securities.TokenService
+import org.cisnux.jediplanner.domains.securities.TokenManager
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -23,7 +23,7 @@ class AuthServiceImpl(
     private val encoder: PasswordEncoder,
     private val userService: UserService,
     private val userRepository: UserRepository,
-    private val tokenService: TokenService,
+    private val tokenManager: TokenManager,
     private val tokenRepository: TokenRepository,
     private val jwtProperties: JwtProperties,
 ) :
@@ -37,12 +37,12 @@ class AuthServiceImpl(
                 message = "invalid email or password"
             )
         }
-        val accessToken = tokenService.generate(
+        val accessToken = tokenManager.generate(
             secretKey = jwtProperties.accessSecret,
             user = user,
             expirationDate = Instant.now().plusMillis(jwtProperties.accessTokenExpiration)
         )
-        val refreshToken = tokenService.generate(
+        val refreshToken = tokenManager.generate(
             secretKey = jwtProperties.refreshSecret,
             user = user,
             expirationDate = Instant.now().plusMillis(jwtProperties.refreshTokenExpiration)
@@ -71,7 +71,7 @@ class AuthServiceImpl(
     }
 
     override suspend fun refresh(refreshToken: String): TokenResponse? = try {
-        val email = tokenService.extractEmail(secretKey = jwtProperties.refreshSecret, refreshToken)
+        val email = tokenManager.extractEmail(secretKey = jwtProperties.refreshSecret, refreshToken)
         email?.let {
             val currentUser = userService.findByUsername(email)
                 ?: throw APIException.UnauthenticatedException(
@@ -79,13 +79,13 @@ class AuthServiceImpl(
                 )
             val isRefreshTokenExists = tokenRepository.isExists(refreshToken)
 
-            if (isRefreshTokenExists && tokenService.isValid(
+            if (isRefreshTokenExists && tokenManager.isValid(
                     secretKey = jwtProperties.refreshSecret,
                     refreshToken,
                     currentUser
                 ) && email == currentUser.email
             ) {
-                val accessToken = tokenService.generate(
+                val accessToken = tokenManager.generate(
                     secretKey = jwtProperties.accessSecret,
                     user = currentUser,
                     expirationDate = Instant.now().plusMillis(jwtProperties.accessTokenExpiration)
