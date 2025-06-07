@@ -20,7 +20,7 @@ import org.springframework.web.reactive.result.method.annotation.ArgumentResolve
 @Configuration
 @EnableConfigurationProperties(JwtProperties::class)
 @EnableWebFluxSecurity
-class SecurityConfig(
+class AuthenticationConfig(
     private val restSubjectArgumentResolver: RestSubjectArgumentResolver,
     private val authenticationFilter: AuthenticationFilter,
     private val graphqlSubjectArgumentResolver: GraphqlSubjectArgumentResolver

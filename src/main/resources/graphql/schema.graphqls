@@ -1,7 +1,7 @@
 scalar Long
 
 type Query {
-    tasks: [TaskRespDTO!]!
+    _empty: String
 }
 
 type Subscription {

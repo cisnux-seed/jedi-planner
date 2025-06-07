@@ -173,7 +173,6 @@ class AuthenticationFilter(
         request: WebGraphQlRequest,
         chain: WebGraphQlInterceptor.Chain
     ): Mono<WebGraphQlResponse?> {
-        log.info("processing GraphQL header: ${request.headers}")
         log.info("processing GraphQL request: $request with variables: ${request.variables}")
         val error = GraphqlErrorBuilder.newError()
             .message("authentication is required")
@@ -181,7 +180,7 @@ class AuthenticationFilter(
         val executionResult = ExecutionResultImpl.newExecutionResult()
         val authHeader = request.headers.getFirst("Authorization")
 
-        if (request.operationName == "IntrospectionQuery") {
+        if (request.document.contains("IntrospectionQuery")) {
             log.info("GraphQL request is for GraphiQL, skipping authentication")
             return chain.next(request)
         }

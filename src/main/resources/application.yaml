@@ -1,12 +1,9 @@
 spring:
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
   application:
     name: jedi-planner
   jackson:
     property-naming-strategy: LOWER_CAMEL_CASE
   main:
-    allow-bean-definition-overriding: true
     web-application-type: reactive
 server:
   port: 3120
