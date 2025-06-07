@@ -1,7 +1,6 @@
 package org.cisnux.jediplanner.domains.services
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
 import org.cisnux.jediplanner.domains.entities.Task
 
 interface TaskService {

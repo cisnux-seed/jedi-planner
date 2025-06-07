@@ -3,7 +3,6 @@ plugins {
     kotlin("plugin.spring") version "2.1.10"
     id("org.springframework.boot") version "3.4.5"
     id("io.spring.dependency-management") version "1.1.7"
-    id("com.netflix.dgs.codegen") version "7.0.3"
 }
 group = "org.cisnux"
 version = "0.0.1-SNAPSHOT"
@@ -48,7 +47,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("com.graphql-java:graphql-java-extended-scalars")
+    implementation("com.graphql-java:graphql-java-extended-scalars:22.0")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.bouncycastle:bcprov-jdk15to18:1.80")
 }
@@ -57,11 +56,6 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
     }
-}
-tasks.generateJava {
-    schemaPaths.add("${projectDir}/src/main/resources/graphql-client")
-    packageName = "org.cisnux.jediplanner.codegen"
-    generateClient = true
 }
 
 tasks.withType<Test> {

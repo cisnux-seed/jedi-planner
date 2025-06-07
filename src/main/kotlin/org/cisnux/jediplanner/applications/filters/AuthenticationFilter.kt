@@ -181,9 +181,6 @@ class AuthenticationFilter(
         val executionResult = ExecutionResultImpl.newExecutionResult()
         val authHeader = request.headers.getFirst("Authorization")
 
-//        log.info("processing GraphQL request: ${request.uri.path}")
-//        log.info("processing GraphQL request2: ${request.uri.path == "document='"}")
-
         if (request.operationName == "IntrospectionQuery") {
             log.info("GraphQL request is for GraphiQL, skipping authentication")
             return chain.next(request)

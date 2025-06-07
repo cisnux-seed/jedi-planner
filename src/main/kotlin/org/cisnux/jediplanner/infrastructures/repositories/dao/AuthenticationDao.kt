@@ -5,6 +5,5 @@ import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Component
 
 @Component
-interface AuthenticationDao : CoroutineCrudRepository<Authentication, String> {
+interface AuthenticationDao : CoroutineCrudRepository<Authentication, String>
 
-}
