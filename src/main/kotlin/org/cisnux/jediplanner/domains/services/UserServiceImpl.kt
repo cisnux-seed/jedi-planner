@@ -54,7 +54,9 @@ class UserServiceImpl(
                 lastName = createUserProfile.lastName,
                 placeOfBirth = createUserProfile.placeOfBirth,
                 dateOfBirth = createUserProfile.dateOfBirth?.let(this@UserServiceImpl::convertToLocalDate),
-                profilePic = createUserProfile.profilePic?.let { "/api/files/${fileManager.exportFilePath(it)}" }
+                profilePic = createUserProfile.profilePic?.let {
+                    log.info("uploading profile picture: $it")
+                    "/api/files/${fileManager.exportFilePath(it)}" }
             )
             userProfileRepository.insert(userProfile)?.id ?: throw APIException.InternalServerException(
                 statusCode = 500,

@@ -1,0 +1,42 @@
+services:
+  jedi-planner-db:
+    container_name: jedi-planner-db
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: developer123
+      POSTGRES_DB: jedi_planner
+    ports:
+      - "5432:5432"
+    volumes:
+      - jedi_planner_pvc_db:/var/lib/postgresql
+      - jedi_planner_pvc_data:/var/lib/postgresql/data
+
+  flyway:
+    container_name: flyway
+    image: flyway/flyway
+    depends_on:
+      - jedi-planner-db
+    volumes:
+      - ./migrations:/flyway/sql
+    command: -url=jdbc:postgresql://jedi-planner-db:5432/jedi_planner -user=developer -password=developer123 migrate
+
+  jedi-planner:
+    container_name: jedi-planner
+    restart: always
+    depends_on:
+      - jedi-planner-db
+      - flyway
+    environment:
+      PROFILE_MODE: local
+    ports:
+      - "3120:3120"
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: "jedi-planner:latest"
+
+volumes:
+  jedi_planner_pvc_db:
+  jedi_planner_pvc_data:

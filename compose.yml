@@ -1,8 +1,0 @@
-services:
-  jedi_planner:
-    container_name: jedi-planner
-    restart: always
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: "jedi-planner:latest"
