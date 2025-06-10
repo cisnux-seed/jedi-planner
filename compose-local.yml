@@ -1,19 +1,24 @@
 services:
-  jedi_oracle19:
-    image: oracle/database:19.3.0-ee
+  jedi_planner_db:
+    image: postgres:latest
     restart: always
     environment:
-      ORACLE_PWD: oracle123
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: developer123
+      POSTGRES_DB: jedi_planner
     ports:
-      - "1523:1521"
+      - "5432:5432"
+    volumes:
+      - jedi_planner_db:/var/lib/postgresql
+      - jedi_planner_db_data:/var/lib/postgresql/datas
 
   flyway:
     image: flyway/flyway
     depends_on:
-      - jedi_oracle19
+      - jedi_planner_db
     volumes:
       - ./migrations:/flyway/sql
-    command: -url=jdbc:oracle:thin:@//jedi_oracle19:1521/ORCLPDB1 -user=developer -password=developer123 migrate
+    command: -url=jdbc:postgresql://jedi_planner_db:5432/jedi_planner -user=developer -password=developer123 migrate
 
   sonarqube:
     image: sonarqube:lts-community
@@ -34,7 +39,7 @@ services:
       - sonarqube_temp:/opt/sonarqube/temp
 
   sonar_db:
-    image: postgres:17.5
+    image: postgres:latest
     restart: always
     environment:
       POSTGRES_USER: sonar
@@ -52,3 +57,5 @@ volumes:
   sonarqube_temp:
   sonar_db:
   sonar_db_data:
+  jedi_planner_db:
+  jedi_planner_db_data:

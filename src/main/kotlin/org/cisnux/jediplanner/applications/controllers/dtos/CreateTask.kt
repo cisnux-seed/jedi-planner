@@ -7,8 +7,8 @@ import jakarta.validation.constraints.Size
 data class CreateTask(
     @field:NotBlank("title cannot be blank")
     @field:Size(
-        max = 100,
-        message = "title cannot be more than 100 characters"
+        max = 255,
+        message = "title cannot be more than 255 characters"
     )
     val title: String,
     @field:Size(

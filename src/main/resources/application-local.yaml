@@ -1,6 +1,6 @@
 spring:
   r2dbc:
-    url: r2dbc:oracle://localhost:1523/ORCLPDB1
+    url: r2dbc:postgresql://localhost:5432/jedi_planner
     username: developer
     password: developer123
   graphql:
@@ -19,3 +19,5 @@ logging:
     io.r2dbc.spi: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
+file:
+  upload-dir: uploads

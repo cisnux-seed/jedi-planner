@@ -9,6 +9,7 @@ import org.cisnux.jediplanner.applications.controllers.dtos.TokenResponse
 import org.cisnux.jediplanner.commons.configs.JwtProperties
 import org.cisnux.jediplanner.commons.exceptions.APIException
 import org.cisnux.jediplanner.applications.controllers.dtos.AuthResponse
+import org.cisnux.jediplanner.domains.dtos.UserAuth
 import org.cisnux.jediplanner.domains.entities.Authentication
 import org.cisnux.jediplanner.domains.entities.User
 import org.cisnux.jediplanner.domains.repositories.TokenRepository
@@ -28,8 +29,8 @@ class AuthServiceImpl(
     private val jwtProperties: JwtProperties,
 ) :
     AuthService {
-    override suspend fun authenticate(user: User): AuthResponse = withContext(Dispatchers.Default) {
-        val existedUser = userService.findByUsername(user.email) ?: throw APIException.UnauthenticatedException(
+    override suspend fun authenticate(user: UserAuth): AuthResponse = withContext(Dispatchers.Default) {
+        val existedUser = userService.getByUsername(user.email) ?: throw APIException.UnauthenticatedException(
             message = "invalid email or password"
         )
         if (!encoder.matches(user.password, existedUser.password)) {
@@ -50,7 +51,7 @@ class AuthServiceImpl(
 
         val authentication = Authentication(
             token = refreshToken,
-            email = existedUser.email
+            userId = existedUser.id!!,
         )
 
         val auth = tokenRepository.insert(authentication) ?: throw APIException.InternalServerException(
@@ -64,6 +65,20 @@ class AuthServiceImpl(
     }
 
     override suspend fun register(user: User): String = withContext(Dispatchers.IO) {
+        val isUsernameExists = userService.isUsernameAvailable(user.username)
+        if (!isUsernameExists) {
+            throw APIException.UnauthenticatedException(
+                message = "username or email already exists"
+            )
+        }
+
+        val isEmailExists = userService.isEmailAvailable(user.email)
+        if (!isEmailExists) {
+            throw APIException.UnauthenticatedException(
+                message = "username or email already exists"
+            )
+        }
+
         val user = user.copy(password = encoder.encode(user.password))
         userRepository.insert(user)?.email ?: throw APIException.InternalServerException(
             message = "failed to create user"
@@ -73,7 +88,7 @@ class AuthServiceImpl(
     override suspend fun refresh(refreshToken: String): TokenResponse? = try {
         val email = tokenManager.extractEmail(secretKey = jwtProperties.refreshSecret, refreshToken)
         email?.let {
-            val currentUser = userService.findByUsername(email)
+            val currentUser = userService.getByUsername(email)
                 ?: throw APIException.UnauthenticatedException(
                     message = "token is invalid or expired"
                 )

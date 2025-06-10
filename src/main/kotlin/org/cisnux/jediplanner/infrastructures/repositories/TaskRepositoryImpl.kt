@@ -8,20 +8,21 @@ import kotlinx.coroutines.withContext
 import org.cisnux.jediplanner.commons.logger.Loggable
 import org.cisnux.jediplanner.domains.repositories.TaskRepository
 import org.cisnux.jediplanner.domains.entities.Task
-import org.cisnux.jediplanner.infrastructures.repositories.dao.TaskDAO
+import org.cisnux.jediplanner.infrastructures.repositories.dao.TaskDao
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.reactive.TransactionalOperator
 import org.springframework.transaction.reactive.executeAndAwait
+import java.util.UUID
 
 @Repository
 class TaskRepositoryImpl(
-    private val taskDAO: TaskDAO,
+    private val taskDAO: TaskDao,
     private val template: R2dbcEntityTemplate,
     private val operator: TransactionalOperator
 ) : TaskRepository, Loggable {
 
-    override suspend fun findById(id: String): Task? = withContext(Dispatchers.IO) {
+    override suspend fun findById(id: UUID): Task? = withContext(Dispatchers.IO) {
         taskDAO.findById(id)
     }
 
@@ -37,11 +38,11 @@ class TaskRepositoryImpl(
         }
     }
 
-    override suspend fun deleteById(id: String): Unit = withContext(Dispatchers.IO) {
+    override suspend fun deleteById(id: UUID): Unit = withContext(Dispatchers.IO) {
         operator.executeAndAwait {
             taskDAO.deleteById(id)
         }
     }
 
-    override fun findAll(email: String): Flow<Task> = taskDAO.findAllByEmail(email).flowOn(Dispatchers.IO)
+    override fun findAll(userId: Long): Flow<Task> = taskDAO.findAllByUserId(userId).flowOn(Dispatchers.IO)
 }

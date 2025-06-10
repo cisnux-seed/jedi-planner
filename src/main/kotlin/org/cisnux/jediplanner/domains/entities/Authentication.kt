@@ -9,7 +9,8 @@ import java.time.LocalDateTime
 data class Authentication(
     @Id
     val token: String,
-    val email: String,
+    @Column("user_id")
+    val userId: Long,
     @Column("created_at")
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

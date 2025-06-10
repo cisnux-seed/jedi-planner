@@ -7,7 +7,11 @@ import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Component
 
 @Component
-interface UserDAO : CoroutineCrudRepository<User, String> {
+interface UserDao : CoroutineCrudRepository<User, Long> {
+    @Lock(LockMode.PESSIMISTIC_WRITE)
+    override suspend fun findById(id: Long): User?
     @Lock(LockMode.PESSIMISTIC_WRITE)
     suspend fun findByEmail(email: String): User?
+    suspend fun existsByUsername(username: String): Boolean
+    suspend fun existsByEmail(email: String): Boolean
 }

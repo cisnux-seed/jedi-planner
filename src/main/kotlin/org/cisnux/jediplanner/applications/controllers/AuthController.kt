@@ -8,7 +8,7 @@ import org.cisnux.jediplanner.applications.controllers.dtos.TokenResponse
 import org.cisnux.jediplanner.applications.controllers.dtos.WebResponse
 import org.cisnux.jediplanner.commons.logger.Loggable
 import org.cisnux.jediplanner.applications.controllers.dtos.AuthResponse
-import org.cisnux.jediplanner.applications.controllers.dtos.UserAuth
+import org.cisnux.jediplanner.domains.dtos.UserAuth
 import org.cisnux.jediplanner.applications.controllers.dtos.UserRegister
 import org.cisnux.jediplanner.domains.entities.User
 import org.cisnux.jediplanner.domains.services.AuthService
@@ -34,7 +34,7 @@ class AuthController(private val authService: AuthService) : Loggable {
         Dispatchers.Default
     ) {
         val user = User(
-            email = userRegister.email, password = userRegister.password
+            username = userRegister.username, email = userRegister.email, password = userRegister.password
         )
         val userId = authService.register(user)
 
@@ -59,10 +59,7 @@ class AuthController(private val authService: AuthService) : Loggable {
     ) {
         log.info("user logging in: $userAuth")
 
-        val user = User(
-            email = userAuth.email, password = userAuth.password
-        )
-        val authResp = authService.authenticate(user)
+        val authResp = authService.authenticate(userAuth)
 
         WebResponse(
             meta = MetaResponse(

@@ -3,13 +3,14 @@ package org.cisnux.jediplanner.domains.services
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import org.cisnux.jediplanner.domains.entities.Task
+import java.util.UUID
 
 interface TaskService {
-    fun getAllByEmail(owner: String): Flow<Task>
-    suspend fun getRealtimeTasks(owner: String): SharedFlow<List<Task>>
-    suspend fun refreshTasks(owner: String)
-    suspend fun getById(owner: String, id: String): Task
-    suspend fun create(newTask: Task): String
-    suspend fun update(newTask: Task): String?
-    suspend fun delete(owner: String, id: String): String?
+    fun getAllByEmail(owner: Long): Flow<Task>
+    suspend fun getRealtimeTasks(owner: Long): SharedFlow<List<Task>>
+    suspend fun refreshTasks(owner: Long)
+    suspend fun getById(owner: Long, id: UUID): Task
+    suspend fun create(newTask: Task): UUID
+    suspend fun update(newTask: Task): UUID
+    suspend fun delete(owner: Long, id: UUID): UUID
 }

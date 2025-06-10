@@ -17,14 +17,15 @@ import org.cisnux.jediplanner.domains.repositories.TaskRepository
 import org.cisnux.jediplanner.domains.entities.Task
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import java.util.UUID
 
 @Service
 class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
     Loggable {
-    private val taskFlows = mutableMapOf<String, MutableStateFlow<List<Task>>>()
+    private val taskFlows = mutableMapOf<Long, MutableStateFlow<List<Task>>>()
     private val mutex = Mutex()
 
-    override suspend fun getRealtimeTasks(owner: String): SharedFlow<List<Task>> {
+    override suspend fun getRealtimeTasks(owner: Long): SharedFlow<List<Task>> {
         mutex.withLock {
             if (!taskFlows.containsKey(owner)) {
                 val initialTasks = taskRepository.findAll(owner).toList()
@@ -38,24 +39,24 @@ class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
         )
     }
 
-    override fun getAllByEmail(owner: String): Flow<Task> =
+    override fun getAllByEmail(owner: Long): Flow<Task> =
         taskRepository.findAll(owner)
 
 
-    override suspend fun refreshTasks(owner: String) {
+    override suspend fun refreshTasks(owner: Long) {
         log.info("Refreshing tasks for user: $owner")
         val updatedTasks = taskRepository.findAll(owner).toList()
         taskFlows[owner]?.emit(updatedTasks)
     }
 
 
-    override suspend fun getById(owner: String, id: String): Task = withContext(Dispatchers.IO) {
+    override suspend fun getById(owner: Long, id: UUID): Task = withContext(Dispatchers.IO) {
         val task = taskRepository.findById(id) ?: throw APIException.NotFoundResourceException(
             statusCode = HttpStatus.NOT_FOUND.value(),
             message = "Task with id $id not found"
         )
 
-        if (task.email != owner) {
+        if (task.userId != owner) {
             throw APIException.ForbiddenException(
                 statusCode = HttpStatus.FORBIDDEN.value(),
                 message = "you are not authorized to access this task"
@@ -65,23 +66,23 @@ class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
         task
     }
 
-    override suspend fun create(newTask: Task): String = withContext(Dispatchers.IO) {
+    override suspend fun create(newTask: Task): UUID = withContext(Dispatchers.IO) {
         log.info("creating new task: $newTask")
         taskRepository.insert(newTask)?.id?.also {
-            refreshTasks(newTask.email)
+            refreshTasks(newTask.userId)
         } ?: throw APIException.InternalServerException(
             statusCode = 500,
             message = "Failed to create task"
         )
     }
 
-    override suspend fun update(newTask: Task): String? = withContext(Dispatchers.IO) {
+    override suspend fun update(newTask: Task): UUID = withContext(Dispatchers.IO) {
         log.info("updating task: $newTask")
         val task = taskRepository.findById(newTask.id)
             ?: throw APIException.NotFoundResourceException(
                 message = "task with id ${newTask.id} not found"
             )
-        if (task.email != newTask.email) {
+        if (task.userId != newTask.userId) {
             throw APIException.ForbiddenException(
                 statusCode = HttpStatus.FORBIDDEN.value(),
                 message = "you are not authorized to update this task"
@@ -95,16 +96,19 @@ class TaskServiceImpl(private val taskRepository: TaskRepository) : TaskService,
             updatedAt = newTask.updatedAt
         )
         taskRepository.update(updatedTask)?.id?.also {
-            refreshTasks(newTask.email)
-        }
+            refreshTasks(newTask.userId)
+        } ?: throw APIException.InternalServerException(
+            statusCode = 500,
+            message = "Failed to update task"
+        )
     }
 
-    override suspend fun delete(owner: String, id: String): String? = withContext(Dispatchers.IO) {
+    override suspend fun delete(owner: Long, id: UUID): UUID = withContext(Dispatchers.IO) {
         val task = taskRepository.findById(id)
             ?: throw APIException.NotFoundResourceException(
                 message = "task with id $id not found"
             )
-        if (task.email != owner) {
+        if (task.userId != owner) {
             throw APIException.ForbiddenException(
                 statusCode = HttpStatus.FORBIDDEN.value(),
                 message = "you are not authorized to delete this task"

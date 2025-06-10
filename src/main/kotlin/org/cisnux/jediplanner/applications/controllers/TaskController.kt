@@ -26,8 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.util.UUID
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -45,13 +44,13 @@ class TaskController(private val taskService: TaskService) : Loggable {
                     message = "successfully retrieved all tasks",
                 ),
                 data = taskService.getAllByEmail(
-                    subject.username
+                    subject.id
                 ).toList().map { task ->
                     TaskResponse(
                         id = task.id,
                         title = task.title,
                         description = task.description,
-                        dueDate = task.dueDate.toInstant(ZoneOffset.UTC).toEpochMilli(),
+                        dueDate = task.dueDate.toEpochMilli(),
                         isCompleted = task.isCompleted
                     )
                 }
@@ -61,7 +60,7 @@ class TaskController(private val taskService: TaskService) : Loggable {
 
     @GetMapping("/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseStatus(HttpStatus.OK)
-    suspend fun getTaskById(@Subject subject: ContextPayload, @PathVariable id: String): WebResponse<TaskResponse> =
+    suspend fun getTaskById(@Subject subject: ContextPayload, @PathVariable id: UUID): WebResponse<TaskResponse> =
         withContext(Dispatchers.Default) {
             WebResponse(
                 meta = MetaResponse(
@@ -69,13 +68,13 @@ class TaskController(private val taskService: TaskService) : Loggable {
                     message = "successfully retrieved task with id $id",
                 ),
                 data = taskService.getById(
-                    owner = subject.username, id = id
+                    owner = subject.id, id = id
                 ).let {
                     TaskResponse(
                         id = it.id,
                         title = it.title,
                         description = it.description,
-                        dueDate = it.dueDate.toInstant(ZoneOffset.UTC).toEpochMilli(),
+                        dueDate = it.dueDate.toEpochMilli(),
                         isCompleted = it.isCompleted
                     )
                 }
@@ -92,7 +91,7 @@ class TaskController(private val taskService: TaskService) : Loggable {
         @RequestBody
         @Validated
         createTaskDTO: CreateTask
-    ): WebResponse<String> =
+    ): WebResponse<UUID> =
         withContext(Dispatchers.Default) {
             log.info("subject: $subject")
             log.info("creating new task: $createTaskDTO")
@@ -100,8 +99,8 @@ class TaskController(private val taskService: TaskService) : Loggable {
             val newTask = Task(
                 title = createTaskDTO.title,
                 description = createTaskDTO.description,
-                dueDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(createTaskDTO.dueDate), ZoneOffset.UTC),
-                email = subject.username
+                dueDate = Instant.ofEpochMilli(createTaskDTO.dueDate),
+                userId = subject.id
             )
 
             WebResponse(
@@ -121,11 +120,11 @@ class TaskController(private val taskService: TaskService) : Loggable {
     @ResponseStatus(HttpStatus.OK)
     suspend fun updateTask(
         @Subject subject: ContextPayload,
-        @PathVariable id: String,
+        @PathVariable id: UUID,
         @RequestBody
         @Validated
         updateTaskDTO: UpdateTask
-    ): WebResponse<String> =
+    ): WebResponse<UUID> =
         withContext(Dispatchers.Default) {
             log.info("updating new task: $updateTaskDTO")
 
@@ -133,8 +132,8 @@ class TaskController(private val taskService: TaskService) : Loggable {
                 id = id,
                 title = updateTaskDTO.title,
                 description = updateTaskDTO.description,
-                dueDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(updateTaskDTO.dueDate), ZoneOffset.UTC),
-                email = subject.username,
+                dueDate = Instant.ofEpochMilli(updateTaskDTO.dueDate),
+                userId = subject.id,
                 isCompleted = updateTaskDTO.isCompleted,
             )
 
@@ -149,7 +148,7 @@ class TaskController(private val taskService: TaskService) : Loggable {
 
     @DeleteMapping("/{id}", produces = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseStatus(HttpStatus.OK)
-    suspend fun deleteTaskById(@Subject subject: ContextPayload, @PathVariable id: String): WebResponse<String> =
+    suspend fun deleteTaskById(@Subject subject: ContextPayload, @PathVariable id: UUID): WebResponse<UUID> =
         withContext(Dispatchers.Default) {
             WebResponse(
                 meta = MetaResponse(
@@ -157,7 +156,7 @@ class TaskController(private val taskService: TaskService) : Loggable {
                     message = "successfully deleted task with id $id",
                 ),
                 data = taskService.delete(
-                    owner = subject.username, id = id
+                    owner = subject.id, id = id
                 )
             )
         }

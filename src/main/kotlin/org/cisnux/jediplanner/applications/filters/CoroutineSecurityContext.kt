@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails
 import kotlin.coroutines.CoroutineContext
 
 data class ContextPayload(
+    val id: Long,
     @JvmField val username: String,
     @JvmField val password: String? = null,
     val roles: List<String> = emptyList(),

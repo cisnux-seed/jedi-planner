@@ -104,10 +104,10 @@ class AuthenticationFilter(
                 return@mono response.writeWith(Mono.just(buffer)).awaitFirstOrNull()
             }
 
-            val user = userServiceImpl.findByUsername(email)
+            val user = userServiceImpl.getByUsername(email)
 
             if (user != null && tokenManager.isValid(jwtProperties.accessSecret, jwtToken, user)) {
-                val ctxPayload = ContextPayload(username = user.email)
+                val ctxPayload = ContextPayload(id = user.id!!, username = user.email)
                 val auth =
                     UsernamePasswordAuthenticationToken(ctxPayload, null, ctxPayload.authorities)
                 val context = SecurityContextImpl(auth)
@@ -143,7 +143,15 @@ class AuthenticationFilter(
             )
 
             return@mono response.writeWith(Mono.just(buffer)).awaitFirstOrNull()
-        } catch (e: Exception) {
+        } catch (_: SignatureException) {
+            log.info("token signature is invalid: $jwtToken")
+            val response = exchange.response
+            val buffer = onAuthenticationFailure(
+                response,
+                "token signature is invalid"
+            )
+            return@mono response.writeWith(Mono.just(buffer)).awaitFirstOrNull()
+        }catch (e: Exception) {
             log.error("error processing authentication", e)
             val response = exchange.response
             val buffer = onAuthenticationFailure(
@@ -201,11 +209,11 @@ class AuthenticationFilter(
             if (email == null) {
                 return Mono.just(onAuthenticationFailure(request.toExecutionInput(), executionResult, error))
             }
-            val user = mono { userServiceImpl.findByUsername(email) }
+            val user = mono { userServiceImpl.getByUsername(email) }
 
             return user.flatMap { user ->
                 if (user != null && tokenManager.isValid(jwtProperties.accessSecret, jwtToken, user)) {
-                    val ctxPayload = ContextPayload(username = user.email)
+                    val ctxPayload = ContextPayload(id = user.id!!, username = user.email)
                     val auth =
                         UsernamePasswordAuthenticationToken(ctxPayload, null, ctxPayload.authorities)
                     val context = SecurityContextImpl(auth)

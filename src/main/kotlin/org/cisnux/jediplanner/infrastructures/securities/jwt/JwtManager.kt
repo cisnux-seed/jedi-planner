@@ -3,6 +3,7 @@ package org.cisnux.jediplanner.infrastructures.securities.jwt
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import org.cisnux.jediplanner.domains.dtos.UserAuth
 import org.cisnux.jediplanner.domains.entities.User
 import org.cisnux.jediplanner.domains.securities.TokenManager
 import org.springframework.stereotype.Service
@@ -11,6 +12,25 @@ import java.util.Date
 
 @Service
 class JwtManager : TokenManager {
+    override fun generate(
+        secretKey: String,
+        user: UserAuth,
+        expirationDate: Instant,
+        additionalClaims: Map<String, Any>
+    ): String {
+        val secretKeyBytes = secretKey.toByteArray()
+        val secret = Keys.hmacShaKeyFor(secretKeyBytes)
+        return Jwts.builder()
+            .claims()
+            .subject(user.email)
+            .issuedAt(Date.from(Instant.now()))
+            .expiration(Date.from(expirationDate))
+            .add(additionalClaims)
+            .and()
+            .signWith(secret)
+            .compact()
+    }
+
     override fun generate(
         secretKey: String,
         user: User,

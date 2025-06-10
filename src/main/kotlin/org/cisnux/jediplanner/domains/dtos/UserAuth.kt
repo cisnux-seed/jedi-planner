@@ -1,4 +1,4 @@
-package org.cisnux.jediplanner.applications.controllers.dtos
+package org.cisnux.jediplanner.domains.dtos
 
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size

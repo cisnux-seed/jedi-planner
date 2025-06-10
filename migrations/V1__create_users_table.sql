@@ -1,7 +1,8 @@
-CREATE TABLE users
-(
-    email      VARCHAR2(50)              NOT NULL PRIMARY KEY,
-    password   VARCHAR2(255)             NOT NULL,
-    created_at TIMESTAMP DEFAULT SYSDATE NOT NULL,
-    updated_at TIMESTAMP DEFAULT SYSDATE NOT NULL
+CREATE TABLE users(
+    id         SERIAL PRIMARY KEY,
+    username   VARCHAR(255)  NOT NULL UNIQUE,
+    email      VARCHAR(255)  NOT NULL UNIQUE,
+    password   VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP    NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP    NOT NULL DEFAULT now()
 );

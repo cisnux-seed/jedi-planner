@@ -1,1 +1,0 @@
-CREATE INDEX idx_tasks_email ON TASKS(EMAIL);
