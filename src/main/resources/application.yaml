@@ -5,5 +5,17 @@ spring:
     property-naming-strategy: LOWER_CAMEL_CASE
   main:
     web-application-type: reactive
+  cloud:
+    stream:
+      bindings:
+        input:
+          destination: tasks
+          group: jedi-planner-group
+        output:
+          destination: tasks
+      default-binder: kafka
+      kafka:
+        binder:
+          brokers:
 server:
-  port: 3120
+  port: ${SERVER_PORT:8080}

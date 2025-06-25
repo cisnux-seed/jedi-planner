@@ -10,8 +10,27 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - jedi_planner_pvc_db:/var/lib/postgresql
-      - jedi_planner_pvc_data:/var/lib/postgresql/data
+      - jedi_planner_db_data:/var/lib/postgresql
+      - jedi_planner_data:/var/lib/postgresql/data
+
+  broker:
+    image: apache/kafka:latest
+    container_name: broker
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 1
+    volumes:
+      - kafka_logs:/tmp/kraft-combined-logs
 
   flyway:
     container_name: flyway
@@ -20,7 +39,7 @@ services:
       - jedi-planner-db
     volumes:
       - ./migrations:/flyway/sql
-    command: -url=jdbc:postgresql://jedi-planner-db:5432/jedi_planner -user=developer -password=developer123 migrate
+    command: sh -c "sleep 10 && -url=jdbc:postgresql://jedi-planner-db:5432/jedi_planner -user=developer -password=developer123 migrate"
 
   jedi-planner:
     container_name: jedi-planner
@@ -31,12 +50,14 @@ services:
     environment:
       PROFILE_MODE: local
     ports:
-      - "3120:3120"
+      - "8080:8080"
     build:
       context: ./
       dockerfile: Dockerfile
     image: "jedi-planner:latest"
 
 volumes:
-  jedi_planner_pvc_db:
-  jedi_planner_pvc_data:
+  oracle-data:
+  jedi_planner_db_data:
+  jedi_planner_data:
+  kafka_logs:

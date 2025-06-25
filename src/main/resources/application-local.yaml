@@ -1,6 +1,6 @@
 spring:
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/jedi_planner
+    url: r2dbc:postgresql://jedi-planner-db:5432/jedi_planner
     username: developer
     password: developer123
   graphql:

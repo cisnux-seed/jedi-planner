@@ -1,0 +1,23 @@
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://jedi-planner-db:5432/jedi_planner
+    username: developer
+    password: developer123
+  graphql:
+    graphiql:
+      enabled: true
+    websocket:
+      path: /graphql
+jwt:
+  refresh-secret: ${REFRESH_TOKEN_SECRET}
+  access-secret: ${ACCESS_TOKEN_SECRET}
+  access-token-expiration: ${ACCESS_TOKEN_EXPIRATION} # 15 minutes
+  refresh-token-expiration: ${REFRESH_TOKEN_EXPIRATION} # 24 hours
+logging:
+  level:
+    org.springframework.r2dbc.core: DEBUG
+    io.r2dbc.spi: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+file:
+  upload-dir: /app/uploads
