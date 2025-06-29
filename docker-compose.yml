@@ -7,10 +7,14 @@ services:
       POSTGRES_USER: developer
       POSTGRES_PASSWORD: developer123
       POSTGRES_DB: jedi_planner
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
     volumes:
-      - jedi_planner_db_data:/var/lib/postgresql
       - jedi_planner_data:/var/lib/postgresql/data
 
   broker:
@@ -36,10 +40,12 @@ services:
     container_name: flyway
     image: flyway/flyway
     depends_on:
-      - jedi-planner-db
+      jedi-planner-db:
+        condition: service_healthy
     volumes:
       - ./migrations:/flyway/sql
-    command: sh -c "sleep 10 && -url=jdbc:postgresql://jedi-planner-db:5432/jedi_planner -user=developer -password=developer123 migrate"
+    command: |
+      -url=jdbc:postgresql://jedi-planner-db:5432/jedi_planner -user=developer -password=developer123 migrate
 
   jedi-planner:
     container_name: jedi-planner
@@ -56,8 +62,16 @@ services:
       dockerfile: Dockerfile
     image: "jedi-planner:latest"
 
+  jenkins:
+    image: jenkins/jenkins:lts
+    ports:
+      - "8081:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+  ssh-agent:
+    image: jenkins/ssh-agent
+
 volumes:
-  oracle-data:
-  jedi_planner_db_data:
   jedi_planner_data:
   kafka_logs:
+  jenkins_home:
