@@ -1,6 +1,7 @@
 package org.cisnux.jediplanner.applications.controllers
 
 import org.cisnux.jediplanner.commons.exceptions.APIException
+import org.cisnux.jediplanner.commons.logger.Loggable
 import org.cisnux.jediplanner.domains.storages.FileManager
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
@@ -12,10 +13,11 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import java.nio.file.NoSuchFileException
 
 @RestController
 @RequestMapping("/api/files")
-class FileController(private val fileManager: FileManager) {
+class FileController(private val fileManager: FileManager): Loggable {
 
     @GetMapping("/{filename:.+}", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
     @ResponseStatus(HttpStatus.OK)
@@ -26,6 +28,7 @@ class FileController(private val fileManager: FileManager) {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.filename + "\"")
                 .body(resource)
         } catch (e: NoSuchFileException){
+            log.error("File not found: $filename, message: ${e.message}, stacktrace: ${e.stackTraceToString()}")
             throw APIException.NotFoundResourceException(
                 statusCode = HttpStatus.NOT_FOUND.value(),
                 message = "file not found: $filename"
