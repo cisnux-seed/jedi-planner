@@ -70,7 +70,7 @@ class UserProfileController(private val userService: UserService) : Loggable {
             WebResponse(
                 meta = MetaResponse(
                     code = HttpStatus.CREATED.value().toString(),
-                    message = "successfully created new task",
+                    message = "successfully created user profile",
                 ),
                 data = userService.createUserProfile(owner = subject.id, createUserProfile)
             )

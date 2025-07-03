@@ -17,24 +17,24 @@ services:
     volumes:
       - jedi_planner_data:/var/lib/postgresql/data
 
-  broker:
-    image: apache/kafka:latest
-    container_name: broker
-    environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_NUM_PARTITIONS: 1
-    volumes:
-      - kafka_logs:/tmp/kraft-combined-logs
+#  broker:
+#    image: apache/kafka:latest
+#    container_name: broker
+#    environment:
+#      KAFKA_NODE_ID: 1
+#      KAFKA_PROCESS_ROLES: broker,controller
+#      KAFKA_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+#      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+#      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+#      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+#      KAFKA_NUM_PARTITIONS: 1
+#    volumes:
+#      - kafka_logs:/tmp/kraft-combined-logs
 
   flyway:
     container_name: flyway
@@ -62,14 +62,28 @@ services:
       dockerfile: Dockerfile
     image: "jedi-planner:latest"
 
-  jenkins:
-    image: jenkins/jenkins:lts
-    ports:
-      - "8081:8080"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-  ssh-agent:
-    image: jenkins/ssh-agent
+#  jenkins:
+#    image: jenkins/jenkins:lts
+#    user: root
+#    privileged: true
+#    ports:
+#      - "8081:8080"
+#      - "50000:50000"
+#    volumes:
+#      - jenkins_home:/var/jenkins_home
+#      - /var/run/docker.sock:/var/run/docker.sock
+#      - /Users/cisnux/.ssh/known_hosts:/var/jenkins_home/.ssh/known_hosts:ro
+#
+#  ssh-agent:
+#    image: jenkins/ssh-agent
+#    user: root
+#    privileged: true
+#    expose:
+#      - "22"
+#    environment:
+#      - JENKINS_AGENT_SSH_PUBKEY=ssh-ed25519 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZWQyNTUxOQAAACAexvlCTlVotNmSi2BiPpSGWNwCCtzKFxQFDcEnBXjboAAAAIhD8YDbQ/GA2wAAAAtzc2gtZWQyNTUxOQAAACAexvlCTlVotNmSi2BiPpSGWNwCCtzKFxQFDcEnBXjboAAAAEDJk2uKiTF6J2xVKEoCi4EqurJaMocAyxAIWXa57B1/GR7G+UJOVWi02ZKLYGI+lIZY3AIK3MoXFAUNwScFeNugAAAAAAECAwQF
+#    depends_on:
+#      - jenkins
 
 volumes:
   jedi_planner_data:

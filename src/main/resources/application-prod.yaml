@@ -11,8 +11,8 @@ spring:
 jwt:
   refresh-secret: ${REFRESH_TOKEN_SECRET}
   access-secret: ${ACCESS_TOKEN_SECRET}
-  access-token-expiration: ${ACCESS_TOKEN_EXPIRATION} # 15 minutes
-  refresh-token-expiration: ${REFRESH_TOKEN_EXPIRATION} # 24 hours
+  access-token-expiration: ${ACCESS_TOKEN_EXPIRATION}
+  refresh-token-expiration: ${REFRESH_TOKEN_EXPIRATION}
 logging:
   level:
     org.springframework.r2dbc.core: DEBUG
