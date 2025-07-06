@@ -62,17 +62,17 @@ services:
       dockerfile: Dockerfile
     image: "jedi-planner:latest"
 
-#  jenkins:
-#    image: jenkins/jenkins:lts
-#    user: root
-#    privileged: true
-#    ports:
-#      - "8081:8080"
-#      - "50000:50000"
-#    volumes:
-#      - jenkins_home:/var/jenkins_home
-#      - /var/run/docker.sock:/var/run/docker.sock
-#      - /Users/cisnux/.ssh/known_hosts:/var/jenkins_home/.ssh/known_hosts:ro
+  jenkins:
+    image: jenkins/jenkins:lts
+    user: jenkins
+    privileged: true
+    ports:
+      - "8083:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ~/.ssh:/var/jenkins_home/.ssh
+      - /var/run/docker.sock:/var/run/docker.sock
 #
 #  ssh-agent:
 #    image: jenkins/ssh-agent

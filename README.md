@@ -14,8 +14,6 @@ your workload.
 - **Prioritization**: Assign priority levels to tasks to focus on what matters most.
 - **Search and Filter**: Quickly find tasks using search and filter options.
 - **User Authentication**: Secure user authentication to protect your data.
-- **Responsive Design**: Works seamlessly on both desktop and mobile devices.
-- **Dark Mode**: Switch to dark mode for a more comfortable viewing experience in low-light conditions.
 
 ## Technologies Used
 
