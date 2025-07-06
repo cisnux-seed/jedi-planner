@@ -11,7 +11,6 @@ your workload.
 - **Task Management**: Create, edit, and delete tasks with ease.
 - **Project Organization**: Group tasks by tagging for better-organization.
 - **Due Dates**: Set due dates for tasks to keep track of deadlines.
-- **Prioritization**: Assign priority levels to tasks to focus on what matters most.
 - **Search and Filter**: Quickly find tasks using search and filter options.
 - **User Authentication**: Secure user authentication to protect your data.
 
