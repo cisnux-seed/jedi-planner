@@ -6,10 +6,32 @@ pipeline{
         APP_VERSION = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
         DOCKER_NAMESPACE = 'fajrarisqulla'
         DOCKER_IMAGE = "${DOCKER_NAMESPACE}/${APP_NAME}"
+        DOCKER_BUILDKIT = '1'  // Enable BuildKit
     }
 
     stages {
-        stage('Build Docker Image') {
+        stage('Setup Multi-platform Builder') {
+            steps {
+                script {
+                    sh """
+                        echo "=== Setting up Docker Buildx ==="
+                        # Check if buildx is available
+                        docker buildx version
+
+                        # Create a new builder instance for multi-platform builds
+                        docker buildx create --name mybuilder --use --bootstrap || true
+
+                        # Verify the builder supports multiple platforms
+                        docker buildx inspect --bootstrap
+
+                        echo "=== Available platforms ==="
+                        docker buildx ls
+                    """
+                }
+            }
+        }
+
+        stage('Build and Push Multi-Platform Docker Image') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
@@ -17,20 +39,41 @@ pipeline{
                                                    usernameVariable: 'DOCKER_USERNAME')]) {
 
                         sh """
-                            echo "=== Authenticating with Docker Hub ==="
-                            echo docker login -u \$DOCKER_USERNAME --password-stdin
-                            echo "Authentication successful"
+                            echo "=== Docker Login ==="
+                            echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
+
+                            echo "=== Building Multi-Platform Image ==="
+                            # Build and push for multiple platforms
+                            docker buildx build \\
+                                --platform linux/amd64,linux/arm64/v8 \\
+                                --build-arg JAR_FILE=build/libs/*.jar \\
+                                --tag ${DOCKER_IMAGE}:${APP_VERSION} \\
+                                --push \\
+                                .
+
+                            echo "=== Multi-platform build completed ==="
                         """
 
-                        def customImage = docker.build("${DOCKER_IMAGE}:${APP_VERSION}",
-                                                      "--build-arg JAR_FILE=build/libs/*.jar .")
-
-                        customImage.push()
-
                         if (env.BRANCH_NAME == 'main') {
-                            customImage.push('latest')
+                            sh """
+                                echo "=== Building and pushing latest tag ==="
+                                docker buildx build \\
+                                    --platform linux/amd64,linux/arm64/v8 \\
+                                    --build-arg JAR_FILE=build/libs/*.jar \\
+                                    --tag ${DOCKER_IMAGE}:latest \\
+                                    --push \\
+                                    .
+                            """
                         } else if (env.BRANCH_NAME == 'develop') {
-                            customImage.push('develop')
+                            sh """
+                                echo "=== Building and pushing develop tag ==="
+                                docker buildx build \\
+                                    --platform linux/amd64,linux/arm64/v8 \\
+                                    --build-arg JAR_FILE=build/libs/*.jar \\
+                                    --tag ${DOCKER_IMAGE}:develop \\
+                                    --push \\
+                                    .
+                            """
                         }
 
                         sh "docker logout"
@@ -43,12 +86,9 @@ pipeline{
     post {
         always {
             sh """
-                docker rmi ${DOCKER_IMAGE}:${APP_VERSION} || true
-                if [ "${env.BRANCH_NAME}" = "main" ]; then
-                    docker rmi ${DOCKER_IMAGE}:latest || true
-                elif [ "${env.BRANCH_NAME}" = "develop" ]; then
-                    docker rmi ${DOCKER_IMAGE}:develop || true
-                fi
+                echo "=== Cleanup ==="
+                docker buildx rm mybuilder || true
+                docker system prune -f || true
             """
         }
     }
