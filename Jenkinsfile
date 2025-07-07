@@ -1,10 +1,5 @@
 pipeline{
-    agent {
-        docker {
-            image 'docker:20.10.24-cli'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
 
     environment {
         APP_NAME = 'jedi-planner'
