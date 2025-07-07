@@ -1,0 +1,35 @@
+FROM jenkins/jenkins:lts
+
+# Switch to root to install Docker
+USER root
+
+# Install Docker CLI using static binary (most reliable)
+RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-20.10.24.tgz" | \
+    tar -xzC /usr/local/bin --strip=1 docker/docker && \
+    chmod +x /usr/local/bin/docker && \
+    rm -rf /var/lib/apt/lists/*
+
+# Add jenkins user to docker group
+RUN groupadd -g 999 docker && usermod -aG docker jenkins
+
+# Switch back to jenkins user
+USER jenkins
+
+# Install essential plugins
+RUN jenkins-plugin-cli --plugins \
+    workflow-aggregator \
+    pipeline-stage-view \
+    pipeline-build-step \
+    pipeline-input-step \
+    pipeline-milestone-step \
+    pipeline-graph-analysis \
+    docker-workflow \
+    docker-commons \
+    docker-build-step \
+    github \
+    github-branch-source \
+    git \
+    dark-theme \
+    blueocean

@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: developer123
       POSTGRES_DB: jedi_planner
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test: [ "CMD-SHELL", "pg_isready" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,7 +44,9 @@ services:
     image: "jedi-planner:latest"
 
   jenkins:
-    image: jenkins/jenkins:lts
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
     user: jenkins
     privileged: true
     ports:
@@ -54,6 +56,10 @@ services:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/.ssh:/var/jenkins_home/.ssh
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    restart: unless-stopped
 
 volumes:
   jedi_planner_data:
