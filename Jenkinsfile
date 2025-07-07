@@ -5,26 +5,35 @@ pipeline{
         APP_NAME = 'jedi-planner'
         APP_VERSION = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
         DOCKER_NAMESPACE = 'fajrarisqulla'
-        DOCKER_REGISTRY = 'docker.io'
         DOCKER_IMAGE = "${DOCKER_NAMESPACE}/${APP_NAME}"
-        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
     }
 
     stages {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
-                        def customImage = docker.build(
-                            "${DOCKER_IMAGE}:${APP_VERSION}",
-                            "--build-arg JAR_FILE=build/libs/*.jar ."
-                        )
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
+                                                   passwordVariable: 'DOCKER_PASSWORD',
+                                                   usernameVariable: 'DOCKER_USERNAME')]) {
+
+                        // Manual docker login - this actually works unlike withRegistry
+                        sh """
+                            echo "=== Authenticating with Docker Hub ==="
+                            echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
+                            echo "Authentication successful"
+                        """
+
+                        def customImage = docker.build("${DOCKER_IMAGE}:${APP_VERSION}",
+                                                      "--build-arg JAR_FILE=build/libs/*.jar .")
+
                         customImage.push()
-                        if (env.GIT_BRANCH == 'main') {
+
+                        if (env.BRANCH_NAME == 'main') {
                             customImage.push('latest')
-                        } else if (env.GIT_BRANCH == 'develop') {
+                        } else if (env.BRANCH_NAME == 'develop') {
                             customImage.push('develop')
                         }
+
                         sh "docker logout"
                     }
                 }
