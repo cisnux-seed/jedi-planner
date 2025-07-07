@@ -1,5 +1,10 @@
 pipeline{
-    agent any
+    agent {
+        docker {
+            image 'docker:25.0.0-cli'  // Latest Docker with buildx included
+            args '-v /var/run/docker.sock:/var/run/docker.sock --privileged'
+        }
+    }
 
     environment {
         APP_NAME = 'jedi-planner'
