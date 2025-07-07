@@ -1,7 +1,8 @@
 pipeline{
     agent {
         docker {
-            image 'docker:28.3.1-cli'
+            image 'docker:28.3.1-cli'  // Latest Docker with buildx included
+            args '-v /var/run/docker.sock:/var/run/docker.sock --privileged'
         }
     }
 
