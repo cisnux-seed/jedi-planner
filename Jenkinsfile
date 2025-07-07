@@ -7,7 +7,7 @@ pipeline{
         DOCKER_REGISTRY = 'docker.io'
         DOCKER_NAMESPACE = 'fajrarisqulla'
         DOCKER_IMAGE = "${DOCKER_REGISTRY}/${DOCKER_NAMESPACE}/${APP_NAME}"
-        DOCKER_CREDENTIALS_ID = credentials('dockerhub-credentials')
+        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
     }
 
     stages {
