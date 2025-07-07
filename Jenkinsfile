@@ -1,7 +1,9 @@
 pipeline{
     agent {
-        image 'docker:20.10.24-dind'
-        args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+        docker {
+            image 'gradle:7.5.1-jdk11'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
     }
 
     environment {
