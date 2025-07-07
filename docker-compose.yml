@@ -54,10 +54,8 @@ services:
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
       - ~/.ssh:/var/jenkins_home/.ssh
     environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
     restart: unless-stopped
 
