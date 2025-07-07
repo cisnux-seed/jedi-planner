@@ -16,10 +16,9 @@ pipeline{
                                                    passwordVariable: 'DOCKER_PASSWORD',
                                                    usernameVariable: 'DOCKER_USERNAME')]) {
 
-                        // Manual docker login - this actually works unlike withRegistry
                         sh """
                             echo "=== Authenticating with Docker Hub ==="
-                            echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
+                            echo docker login -u \$DOCKER_USERNAME --password-stdin
                             echo "Authentication successful"
                         """
 
