@@ -1,6 +1,6 @@
 FROM jenkins/jenkins:lts
 
-# Switch to root to install Docker and Buildx
+# Switch to root to install Docker
 USER root
 
 RUN apt-get update && \
@@ -10,18 +10,6 @@ RUN apt-get update && \
     chmod +x /usr/local/bin/docker && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Docker Buildx plugin
-RUN mkdir -p /usr/local/lib/docker/cli-plugins && \
-    curl -fsSL "https://github.com/docker/buildx/releases/latest/download/buildx-v0.12.1.linux-amd64" \
-    -o /usr/local/lib/docker/cli-plugins/docker-buildx && \
-    chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
-
-# Create cli-plugins directory for jenkins user and create symlink
-RUN mkdir -p /var/jenkins_home/.docker/cli-plugins && \
-    ln -s /usr/local/lib/docker/cli-plugins/docker-buildx /var/jenkins_home/.docker/cli-plugins/docker-buildx && \
-    chown -R jenkins:jenkins /var/jenkins_home/.docker
-
-# Add jenkins user to root group (since Docker socket is owned by root group)
 RUN usermod -aG root jenkins
 
 # Switch back to jenkins user
