@@ -10,6 +10,38 @@ pipeline{
     }
 
     stages {
+        stage('Install and Setup Buildx') {
+            steps {
+                script {
+                    sh """
+                        echo "=== Installing Docker Buildx ==="
+                        # Check Docker version
+                        docker version
+
+                        # Download and install buildx plugin
+                        BUILDX_VERSION=v0.12.1
+                        wget -O docker-buildx "https://github.com/docker/buildx/releases/download/\${BUILDX_VERSION}/buildx-\${BUILDX_VERSION}.linux-amd64"
+                        chmod +x docker-buildx
+                        mkdir -p ~/.docker/cli-plugins
+                        mv docker-buildx ~/.docker/cli-plugins/
+
+                        # Verify installation
+                        docker buildx version
+
+                        echo "=== Setting up QEMU for multi-platform ==="
+                        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+                        echo "=== Creating builder ==="
+                        docker buildx create --name multibuilder --driver docker-container --use
+                        docker buildx inspect --bootstrap
+
+                        echo "=== Available platforms ==="
+                        docker buildx ls
+                    """
+                }
+            }
+        }
+
         stage('Setup Multi-platform Builder') {
             steps {
                 script {
