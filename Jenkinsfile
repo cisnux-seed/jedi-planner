@@ -5,6 +5,7 @@ pipeline{
         APP_NAME = 'jedi-planner'
         APP_VERSION = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
         DOCKER_NAMESPACE = 'fajrarisqulla'
+        DOCKER_REGISTRY = 'docker.io'
         DOCKER_IMAGE = "${DOCKER_NAMESPACE}/${APP_NAME}"
     }
 
