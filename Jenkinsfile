@@ -12,18 +12,20 @@ pipeline{
         DOCKER_CREDENTIALS_ID = credentials('dockerhub-credentials')
     }
 
-    stage('Build Docker Image') {
-        steps {
-            script {
-                docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
-                    def customImage = docker.build("${DOCKER_IMAGE}:${APP_VERSION}",
-                        "--build-arg JAR_FILE=build/libs/*.jar .")
-                    customImage.push()
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
+                        def customImage = docker.build("${DOCKER_IMAGE}:${APP_VERSION}",
+                            "--build-arg JAR_FILE=build/libs/*.jar .")
+                        customImage.push()
 
-                    if (env.GIT_BRANCH == 'main') {
-                        customImage.push('latest')
-                    } else if (env.GIT_BRANCH == 'develop') {
-                        customImage.push('develop')
+                        if (env.GIT_BRANCH == 'main') {
+                            customImage.push('latest')
+                        } else if (env.GIT_BRANCH == 'develop') {
+                            customImage.push('develop')
+                        }
                     }
                 }
             }
