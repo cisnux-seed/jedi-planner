@@ -12,28 +12,17 @@ pipeline{
         stage('Build Docker Image') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
-                                                   passwordVariable: 'DOCKER_PASSWORD',
-                                                   usernameVariable: 'DOCKER_USERNAME')]) {
-
-                        sh """
-                            echo "=== Authenticating with Docker Hub ==="
-                            echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
-                            echo "Authentication successful"
-                        """
-
-                        // Build using Doker pipeline plugin (this part works)
-                        def customImage = docker.build("${DOCKER_IMAGE}:${APP_VERSION}",
-                                                      "--build-arg JAR_FILE=build/libs/*.jar .")
-
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
+                        def customImage = docker.build(
+                            "${DOCKER_IMAGE}:${APP_VERSION}",
+                            "--build-arg JAR_FILE=build/libs/*.jar ."
+                        )
                         customImage.push()
-
-                        if (env.BRANCH_NAME == 'main') {
+                        if (env.GIT_BRANCH == 'main') {
                             customImage.push('latest')
-                        } else if (env.BRANCH_NAME == 'develop') {
+                        } else if (env.GIT_BRANCH == 'develop') {
                             customImage.push('develop')
                         }
-
                         sh "docker logout"
                     }
                 }
