@@ -11,8 +11,7 @@ RUN apt-get update && \
     chmod +x /usr/local/bin/docker && \
     rm -rf /var/lib/apt/lists/*
 
-# Add jenkins user to docker group
-RUN groupadd -g 999 docker && usermod -aG docker jenkins
+RUN usermod -aG root jenkins
 
 # Switch back to jenkins user
 USER jenkins
@@ -27,7 +26,6 @@ RUN jenkins-plugin-cli --plugins \
     pipeline-graph-analysis \
     docker-workflow \
     docker-commons \
-    docker-build-step \
     github \
     github-branch-source \
     git \
