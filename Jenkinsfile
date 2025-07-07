@@ -4,7 +4,7 @@ pipeline{
         stage("Greeter"){
             steps {
                 script {
-                    echo "Hello, World! This is a Jenkins pipeline."
+                    echo "Hello, World! This is a Jenkins 👍🏻."
                 }
             }
         }
