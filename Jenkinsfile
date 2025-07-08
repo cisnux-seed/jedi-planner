@@ -22,6 +22,7 @@ pipeline{
 
                             echo "=== Building Multi-Platform Image ==="
                             # Build and push for multiple platforms
+                            docker buildx create --name mybuilder --driver docker-container --use
                             docker buildx build \\
                                 --platform linux/amd64,linux/arm64/v8 \\
                                 --build-arg JAR_FILE=build/libs/*.jar \\
@@ -65,6 +66,7 @@ pipeline{
         always {
             sh """
                 echo "=== Cleanup ==="
+                docker buildx rm mybuilder || true
                 docker system prune -f || true
             """
         }
