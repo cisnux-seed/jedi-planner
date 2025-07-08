@@ -68,6 +68,7 @@ pipeline{
                 echo "=== Cleanup ==="
                 docker buildx rm mybuilder || true
                 docker system prune -f || true
+                echo "=== Cleanup completed ==="
             """
         }
     }
